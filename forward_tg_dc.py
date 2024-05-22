@@ -96,7 +96,7 @@ async def handler(event):
     msg = '\n'.join(lines)
 
     # check for certain words.
-    words_to_check = ["tokens", "trading"]
+    words_to_check = ["tokens", "trading", "burned"]
     presence = check_words_in_message(msg, words_to_check)
 
     if presence:
