@@ -20,7 +20,8 @@ client.start()
 # Channels parsing
 channels = []
 if not (False in config['channel_names']):
-    print("You're using channel names in your config!\nWe recommend using channel IDs as they're rename and repeat-proof.\nYou can get it either by enabling experimental \"Show Peer IDs\" setting in desktop or, if you're on mobile (for some reason), by using modded client and enabling it there.\nMake sure to use Telegam API, not Bot API!\n")
+    print("You're using channel names in your config!\nWe recommend using channel IDs as they're rename and repeat-proof.\n"
+          "You can get it either by enabling experimental \"Show Peer IDs\" setting in desktop or, if you're on mobile (for some reason), by using modded client and enabling it there.\nMake sure to use Telegam API, not Bot API!\n")
 for d in client.iter_dialogs():
     if not (False in config['channel_names']):
         if d.entity.id in config['channel_ids']:
@@ -31,9 +32,12 @@ for d in client.iter_dialogs():
                 channels.append(InputChannel(d.entity.id, d.entity.access_hash))
             else:
                 if d.entity.id in config['channel_ids']:
-                    print('Your config has same channel in ID and name entries!\nWe recommend removing channel name entry to avoid any unwanted forwards if another channel changes their name to one in config.\n')
+                    print('Your config has same channel in ID and name entries!\n'
+                          'We recommend removing channel name entry to avoid any unwanted forwards if another channel changes their name to one in config.\n')
                 else:
-                    print('You have two (or more) channels with same name as in config!\nTo not break anything, program will be stopped.\nUse ID, rename your channel or leave channels with same name to proceed.')
+                    print('You have two (or more) channels with same name as in config!\n'
+                          'To not break anything, program will be stopped.\n'
+                          'Use ID, rename your channel or leave channels with same name to proceed.')
                     exit()
 if channels == []:
     print("No channels found.\nMake sure that you've inputted channel IDs and/or channel names in config.yml correctly.")
@@ -63,7 +67,9 @@ async def handler(event):
                 if not InputChannel(d.entity.id, d.entity.access_hash) in channels:
                     channels.append(InputChannel(d.entity.id, d.entity.access_hash))
                 elif not d.entity.id in config['channel_ids']:
-                    print('You have two (or more) channels with same name as in config!\nTo not break anything, program will be stopped.\nUse ID, rename your channel or leave channels with same name to proceed.')
+                    print('You have two (or more) channels with same name as in config!\n'
+                          'To not break anything, program will be stopped.\n'
+                          'Use ID, rename your channel or leave channels with same name to proceed.')
                     await event.edit('You have >=2 channels with same name! Check console for more info.')
                     await asyncio.sleep(5)
                     await event.delete()
@@ -81,7 +87,20 @@ async def handler(event):
 # Grabbing messages
 @client.on(events.NewMessage(chats=channels))
 async def handler(event):
-    msg = event.message.text
+    data = event.message.text
+    # Split the message into lines
+    lines = data.split('\n')
+    # Remove the last three lines
+    lines = lines[:-3]
+    # Join the lines back into a single string
+    msg = '\n'.join(lines)
+
+    # check for certain words.
+    words_to_check = ["tokens", "trading"]
+    presence = check_words_in_message(msg, words_to_check)
+
+    for word, is_present in presence.items():
+        print(f"'{word}' in message: {is_present}")
 
     async with aiohttp.ClientSession() as session:
         global wait, files
@@ -123,6 +142,21 @@ async def send_message_in_chunks(webhook, message, embed=None, files=None):
             await webhook.send(chunk, embed=embed, files=files)
         else:
             await webhook.send(chunk)
+
+
+def check_words_in_message(message, words):
+    """
+    Check if any of the specified words are in the message.
+
+    :param message: The message string to check.
+    :param words: A list of words to search for in the message.
+    :return: A dictionary with words as keys and boolean values indicating their presence.
+    """
+    # Convert the message to lowercase to make the search case insensitive
+    message_lower = message.lower()
+    # Create a dictionary to store the presence of each word
+    word_presence = {word: word.lower() in message_lower for word in words}
+    return word_presence
 
 print("Init complete; Starting listening for messages...\n------")
 client.run_until_disconnected()
