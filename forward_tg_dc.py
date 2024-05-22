@@ -99,40 +99,39 @@ async def handler(event):
     words_to_check = ["tokens", "trading"]
     presence = check_words_in_message(msg, words_to_check)
 
-    for word, is_present in presence.items():
-        print(f"'{word}' in message: {is_present}")
-
-    async with aiohttp.ClientSession() as session:
-        global wait, files
-        webhook = Webhook.from_url(config['discord_webhook_url'], session=session)
-        embed = disnake.Embed()
-        if config['output_channel_source'] or event.message.post_author or event.message.reply_to:
-            reply = await event.message.get_reply_message()
-            if reply: embed.description = f'>>> {reply.text}'+('\n' if reply.text else '')+('(Sticker)' if reply.sticker else '(Poll)' if reply.poll else '(Voice)' if reply.voice else '(Gif)' if reply.gif else '(Document)' if reply.document else '(Media)' if reply.media else '')
-            if config['output_channel_source']:
-                channel = await event.get_chat()
-                embed.set_footer(text=f'Forwarded from {channel.title}')
-            if event.message.post_author:
-                embed.set_author(name=f'Sent by {event.message.post_author}')
-        else: embed = None
-        if event.message.media and not event.web_preview:
-            media = await event.message.download_media()
-            file = disnake.File(fp=media)
-            os.remove(media)
-            wait = True
-            files.append(file)
-            await asyncio.sleep(1)
-            if wait == True:
-                wait = False
-                if msg:
-                    #await webhook.send(msg,embed=embed,files=files)
-                    await send_message_in_chunks(webhook, msg, embed, files)
-                else:
-                    await webhook.send(embed=embed,files=files)
-                files = []
-        else:
-            #await webhook.send(msg,embed=embed)
-            await send_message_in_chunks(webhook, msg, embed)
+    if presence:
+        async with aiohttp.ClientSession() as session:
+            global wait, files
+            webhook = Webhook.from_url(config['discord_webhook_url'], session=session)
+            embed = disnake.Embed()
+            if config['output_channel_source'] or event.message.post_author or event.message.reply_to:
+                reply = await event.message.get_reply_message()
+                if reply:
+                    embed.description = f'>>> {reply.text}'+('\n' if reply.text else '')+('(Sticker)' if reply.sticker else '(Poll)' if reply.poll else '(Voice)' if reply.voice else '(Gif)' if reply.gif else '(Document)' if reply.document else '(Media)' if reply.media else '')
+                # if config['output_channel_source']:
+                #     channel = await event.get_chat()
+                #     embed.set_footer(text=f'Forwarded from {channel.title}')
+                # if event.message.post_author:
+                #     embed.set_author(name=f'Sent by {event.message.post_author}')
+            else: embed = None
+            if event.message.media and not event.web_preview:
+                media = await event.message.download_media()
+                file = disnake.File(fp=media)
+                os.remove(media)
+                wait = True
+                files.append(file)
+                await asyncio.sleep(1)
+                if wait == True:
+                    wait = False
+                    if msg:
+                        #await webhook.send(msg,embed=embed,files=files)
+                        await send_message_in_chunks(webhook, msg, embed, files)
+                    else:
+                        await webhook.send(embed=embed, files=files)
+                    files = []
+            else:
+                #await webhook.send(msg,embed=embed)
+                await send_message_in_chunks(webhook, msg, embed)
 
 async def send_message_in_chunks(webhook, message, embed=None, files=None):
     MAX_LENGTH = 2000
@@ -154,9 +153,11 @@ def check_words_in_message(message, words):
     """
     # Convert the message to lowercase to make the search case insensitive
     message_lower = message.lower()
-    # Create a dictionary to store the presence of each word
-    word_presence = {word: word.lower() in message_lower for word in words}
-    return word_presence
+    # Check for the presence of any word in the message
+    for word in words:
+        if word.lower() in message_lower:
+            return True
+    return False
 
 print("Init complete; Starting listening for messages...\n------")
 client.run_until_disconnected()
