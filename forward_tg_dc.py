@@ -6,6 +6,8 @@ import disnake
 from disnake import Webhook
 import aiohttp
 import asyncio
+import re
+
 
 # Crutch for attaching attaches in same message as they were sent, because Telegram doesn't do that for some reason
 wait = False
@@ -99,6 +101,7 @@ async def handler(event):
     words_to_check = ["tokens", "trading", "burned"]
     presence = check_words_in_message(msg, words_to_check)
 
+
     if presence:
         async with aiohttp.ClientSession() as session:
             global wait, files
@@ -158,6 +161,31 @@ def check_words_in_message(message, words):
         if word.lower() in message_lower:
             return True
     return False
+
+
+def update_link_with_word(message, word_to_find, new_link):
+    """
+    Update the link associated with a specific word in the message.
+
+    :param message: The original message string.
+    :param word_to_find: The word whose associated link needs to be updated.
+    :param new_link: The new link to replace the old link associated with the word.
+    :return: The updated message string.
+    """
+    # Use regular expression to find the old link associated with the word
+    regex_pattern = rf'\b{re.escape(word_to_find)}\b\([^()]+\)'
+    match = re.search(regex_pattern, message)
+
+    # If a match is found, replace the old link with the new link
+    if match:
+        old_link = match.group(0)
+        updated_link = f"{word_to_find} ({new_link})"
+        updated_message = message.replace(old_link, updated_link)
+        return updated_message
+    else:
+        # If no match is found, return the original message
+        return message
+
 
 print("Init complete; Starting listening for messages...\n------")
 client.run_until_disconnected()
