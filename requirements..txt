@@ -1,0 +1,6 @@
+telethon
+pyyaml
+discord.py
+disnake
+aiohttp
+asyncio
