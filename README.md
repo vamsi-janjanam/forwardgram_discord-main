@@ -1,6 +1,4 @@
-# <img src="resources/bricksmol.gif"> Forwardgram: Discord Webhook Edition — Forward Telegram Messages to Discord
-
-<img src="resources/itjustworks.png">
+# Forwardgram: Forward Telegram Messages to Discord
 
 ## Description
 Forwardgram is a script that uses your Telegram account for parsing new messages from one or more Telegram channels and forwards them to Discord channel using webhook. All you need is your Telegram and Discord accounts!
@@ -14,7 +12,7 @@ Forwardgram is a script that uses your Telegram account for parsing new messages
 1. Clone this repository
 2. Install required libraries (simpliest way is to open cloned folder in console and running `python3 -m pip install -r requirements.txt`)
 3. Fill out `config.yml` file
-4. Run `python3 forwardgram_tg_dc.py`!
+4. Run `python3 forward_tg_dc.py`!
 
 ### Running and using
 In the first time initializing the script, you will be requried to validate your phone number using Telegram API. This happens only at first time per session name. Don't worry, your account will be used only for reading messages, not for sending them (or anything else)!

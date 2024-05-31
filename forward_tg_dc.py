@@ -93,7 +93,7 @@ async def handler(event):
     # Split the message into lines
     lines = data.split('\n')
     # Remove the last three lines
-    lines = lines[:-3]
+    lines = lines[:-4]
     # Join the lines back into a single string
     msg = '\n'.join(lines)
 
@@ -101,8 +101,10 @@ async def handler(event):
     words_to_check = ["tokens", "trading", "burned"]
     presence = check_words_in_message(msg, words_to_check)
 
-
     if presence:
+        # Update the links in the message
+        msg = update_telegram_links(msg)
+
         async with aiohttp.ClientSession() as session:
             global wait, files
             webhook = Webhook.from_url(config['discord_webhook_url'], session=session)
@@ -111,11 +113,6 @@ async def handler(event):
                 reply = await event.message.get_reply_message()
                 if reply:
                     embed.description = f'>>> {reply.text}'+('\n' if reply.text else '')+('(Sticker)' if reply.sticker else '(Poll)' if reply.poll else '(Voice)' if reply.voice else '(Gif)' if reply.gif else '(Document)' if reply.document else '(Media)' if reply.media else '')
-                # if config['output_channel_source']:
-                #     channel = await event.get_chat()
-                #     embed.set_footer(text=f'Forwarded from {channel.title}')
-                # if event.message.post_author:
-                #     embed.set_author(name=f'Sent by {event.message.post_author}')
             else: embed = None
             if event.message.media and not event.web_preview:
                 media = await event.message.download_media()
@@ -163,28 +160,30 @@ def check_words_in_message(message, words):
     return False
 
 
-def update_link_with_word(message, word_to_find, new_link):
+def update_telegram_links(message):
     """
-    Update the link associated with a specific word in the message.
+    Updates BONK and TROJAN links in the Telegram message for Discord.
 
-    :param message: The original message string.
-    :param word_to_find: The word whose associated link needs to be updated.
-    :param new_link: The new link to replace the old link associated with the word.
-    :return: The updated message string.
+    Args:
+      message: The message text from Telegram.
+
+    Returns:
+      The modified message text with updated links.
     """
-    # Use regular expression to find the old link associated with the word
-    regex_pattern = rf'\b{re.escape(word_to_find)}\b\([^()]+\)'
-    match = re.search(regex_pattern, message)
+    # Define link update patterns and replacement links
+    link_patterns = {
+      "BONK": (r"[BONK](https://t.me/mcqueen_bonkbot?start=ref_n6n6o_ca_YTCVPo4hpDpfy18y5rKcCHGeW9cFk4fWjHmHHgJ7zNS)", "[BONK](https://t.me/bonkbot_bot?start=ref_g00wa"),
+      "TROJAN": (r"[TROJAN](https://t.me/paris_trojanbot?start=r-doubleny-YTCVPo4hpDpfy18y5rKcCHGeW9cFk4fWjHmHHgJ7zNS)", "[TROJAN](https://t.me/hector_trojanbot?start=r-krisj318")
+    }
 
-    # If a match is found, replace the old link with the new link
-    if match:
-        old_link = match.group(0)
-        updated_link = f"{word_to_find} ({new_link})"
-        updated_message = message.replace(old_link, updated_link)
-        return updated_message
-    else:
-        # If no match is found, return the original message
-        return message
+    # Update links using the defined patterns
+    for link_type, (pattern, new_link) in link_patterns.items():
+        print(link_type)
+        print(pattern)
+        print(new_link)
+        message = re.sub(pattern, new_link, message)
+        print(message)
+    return message
 
 
 print("Init complete; Starting listening for messages...\n------")
